@@ -12,6 +12,7 @@ public class NotepadForm : Form
         "YMH219-NotepadApp", "notlar.json"));
 
     private readonly ListBox _liste = new() { Dock = DockStyle.Fill, IntegralHeight = false, HorizontalScrollbar = true };
+    private readonly TextBox _arama = new() { Dock = DockStyle.Top, PlaceholderText = "Başlık veya içerikte ara" };
     private readonly Panel _solPanel = new() { Dock = DockStyle.Left, Width = 280, Padding = new Padding(6) };
     private readonly TextBox _baslik = new() { Dock = DockStyle.Top, PlaceholderText = "Başlık", MaxLength = 100 };
     private readonly TextBox _icerik = new()
@@ -42,6 +43,8 @@ public class NotepadForm : Form
 
         _dugmeler.Controls.AddRange(new Control[] { _yeniDugme, _kaydetDugme, _silDugme, _aktarDugme });
         _solPanel.Controls.Add(_liste);
+        _solPanel.Controls.Add(_arama);
+        _arama.TextChanged += (_, _) => ListeyiYenile(_secili);
 
         var editor = new Panel { Dock = DockStyle.Fill, Padding = new Padding(6) };
         editor.Controls.Add(_icerik);
@@ -128,13 +131,14 @@ public class NotepadForm : Form
         _liste.Items.Clear();
         foreach (Not not in GorunenNotlar())
             _liste.Items.Add(not);
-        _liste.SelectedItem = secilecek;
+        _liste.SelectedItem = secilecek; // arama sonucunda yoksa seçim boş kalır
         _liste.EndUpdate();
         _dolduruluyor = false;
     }
 
     // En son düzenlenen not en üstte durur.
-    private IEnumerable<Not> GorunenNotlar() => _depo.Notlar.OrderByDescending(n => n.DuzenlemeTarihi);
+    private IEnumerable<Not> GorunenNotlar() =>
+        _depo.Ara(_arama.Text).OrderByDescending(n => n.DuzenlemeTarihi);
 
     private void Goster(Not? not)
     {

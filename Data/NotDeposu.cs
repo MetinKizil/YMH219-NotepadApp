@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
@@ -57,6 +58,19 @@ public class NotDeposu
         string yedek = $"{DosyaYolu}.bozuk-{DateTime.Now:yyyyMMdd-HHmmss}";
         File.Copy(DosyaYolu, yedek);
         return yedek;
+    }
+
+    /// <summary>Başlığı veya içeriği aranan metni içeren notlar (büyük/küçük harf duyarsız).</summary>
+    public IEnumerable<Not> Ara(string metin)
+    {
+        string aranan = metin.Trim();
+        if (aranan.Length == 0) return _notlar;
+
+        // Türkçe kültür: "İ-i" ve "I-ı" doğru eşleşir
+        var karsilastirma = CultureInfo.GetCultureInfo("tr-TR").CompareInfo;
+        bool Icerir(string kaynak) => karsilastirma.IndexOf(kaynak, aranan, CompareOptions.IgnoreCase) >= 0;
+
+        return _notlar.Where(n => Icerir(n.Baslik) || Icerir(n.Icerik));
     }
 
     public Not Ekle(string baslik, string icerik)
