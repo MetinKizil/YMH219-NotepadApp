@@ -74,4 +74,15 @@ public class NotDeposu
     }
 
     public void Sil(Not not) => _notlar.Remove(not);
+
+    /// <summary>Tek bir notu düz metin dosyasına aktarır.</summary>
+    public static void DisaAktar(Not not, string yol)
+    {
+        using var yazici = new StreamWriter(yol, append: false, Encoding.UTF8);
+        yazici.WriteLine(not.Baslik);
+        yazici.WriteLine($"Oluşturma: {not.OlusturmaTarihi:dd.MM.yyyy HH:mm}");
+        yazici.WriteLine($"Düzenleme: {not.DuzenlemeTarihi:dd.MM.yyyy HH:mm}");
+        yazici.WriteLine();
+        yazici.Write(not.Icerik);
+    }
 }

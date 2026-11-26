@@ -22,6 +22,7 @@ public class NotepadForm : Form
     private readonly Button _yeniDugme = new() { Text = "Yeni Not", AutoSize = true };
     private readonly Button _kaydetDugme = new() { Text = "Kaydet", AutoSize = true };
     private readonly Button _silDugme = new() { Text = "Sil", AutoSize = true };
+    private readonly Button _aktarDugme = new() { Text = "Dışa Aktar (.txt)", AutoSize = true };
     private readonly FlowLayoutPanel _dugmeler = new() { Dock = DockStyle.Top, AutoSize = true, Padding = new Padding(6) };
     private readonly MenuStrip _menu = new();
     private readonly ToolStripMenuItem _dosyaMenu = new("Dosya");
@@ -39,7 +40,7 @@ public class NotepadForm : Form
         MinimumSize = new Size(640, 400);
         StartPosition = FormStartPosition.CenterScreen;
 
-        _dugmeler.Controls.AddRange(new Control[] { _yeniDugme, _kaydetDugme, _silDugme });
+        _dugmeler.Controls.AddRange(new Control[] { _yeniDugme, _kaydetDugme, _silDugme, _aktarDugme });
         _solPanel.Controls.Add(_liste);
 
         var editor = new Panel { Dock = DockStyle.Fill, Padding = new Padding(6) };
@@ -49,6 +50,7 @@ public class NotepadForm : Form
         _dosyaMenu.DropDownItems.Add(MenuItem("Yeni Not", Keys.Control | Keys.N, YeniNot));
         _dosyaMenu.DropDownItems.Add(MenuItem("Kaydet", Keys.Control | Keys.S, () => NotuKaydet()));
         _dosyaMenu.DropDownItems.Add(MenuItem("Notu Sil", Keys.None, NotuSil));
+        _dosyaMenu.DropDownItems.Add(MenuItem("Dışa Aktar (.txt)", Keys.Control | Keys.E, DisaAktar));
         _dosyaMenu.DropDownItems.Add(MenuItem("Dosyadan Yeniden Yükle", Keys.F5, YenidenYukle));
         _menu.Items.Add(_dosyaMenu);
 
@@ -66,6 +68,7 @@ public class NotepadForm : Form
         _yeniDugme.Click += (_, _) => YeniNot();
         _kaydetDugme.Click += (_, _) => NotuKaydet();
         _silDugme.Click += (_, _) => NotuSil();
+        _aktarDugme.Click += (_, _) => DisaAktar();
         _liste.SelectedIndexChanged += (_, _) => SecimDegisti();
         _baslik.TextChanged += (_, _) => AlanDegisti();
         _icerik.TextChanged += (_, _) => AlanDegisti();
@@ -141,7 +144,7 @@ public class NotepadForm : Form
         _icerik.Text = not?.Icerik ?? "";
         _dolduruluyor = false;
         _degisti = false;
-        _silDugme.Enabled = not != null;
+        _silDugme.Enabled = _aktarDugme.Enabled = not != null;
 
         if (not != null)
             _durum.Text = $"Oluşturma: {not.OlusturmaTarihi:dd.MM.yyyy HH:mm}   Düzenleme: {not.DuzenlemeTarihi:dd.MM.yyyy HH:mm}";
@@ -214,6 +217,26 @@ public class NotepadForm : Form
         ListeyiYenile(null);
         Goster(null);
         if (yazildi) _durum.Text = "Not silindi.";
+    }
+
+    private void DisaAktar()
+    {
+        if (!DegisiklikleriSor() || _secili == null) return;
+
+        // başlıktaki dosya adında kullanılamayan karakterler değiştirilir
+        string ad = string.Join("_", _secili.Baslik.Split(Path.GetInvalidFileNameChars()));
+        using var pencere = new SaveFileDialog { Filter = "Metin dosyası (*.txt)|*.txt", FileName = ad + ".txt" };
+        if (pencere.ShowDialog(this) != DialogResult.OK) return;
+
+        try
+        {
+            NotDeposu.DisaAktar(_secili, pencere.FileName);
+            _durum.Text = "Dışa aktarıldı: " + pencere.FileName;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            HataGoster("Dışa aktarılamadı: " + ex.Message);
+        }
     }
 
     private bool DosyayaYaz()
