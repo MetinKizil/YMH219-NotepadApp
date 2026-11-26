@@ -45,7 +45,13 @@ dotnet run
 
 ## Ekran Görüntüleri
 
-_(en az 2 ekran görüntüsü eklenecek)_
+**Not listesi ve açık not**
+
+![Not listesi ve açık not](screenshots/not-listesi.png)
+
+**Başka bir not seçiliyken**
+
+![Başka bir not seçiliyken](screenshots/not-secimi.png)
 
 ## Bilinen Sınırlamalar
 
